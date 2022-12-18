@@ -47,7 +47,7 @@ async def read_book(book_id: UUID):
     for book in Books:
         if book.id == book_id:
             return book
-    raise HTTPException(status_code=404, detail="book_id is not existed")
+    raise_item_not_found_exception()
 
 
 @app.post("/")
@@ -62,7 +62,7 @@ async def update_book(book_id: UUID, book: Book) -> Book:
         if old_book.id == book_id:
             Books[index] = book
             return Books[index]
-    raise HTTPException(status_code=404, detail="book_id is not existed")
+    raise_item_not_found_exception()
 
 
 @app.delete("/{book_id}")
@@ -71,7 +71,7 @@ async def delete_book(book_id: UUID) -> Book:
         if old_book.id == book_id:
             deleted_book = Books.pop(index)
             return deleted_book
-    raise HTTPException(status_code=404, detail="book_id is not existed")
+    raise_item_not_found_exception()
 
 
 def create_book_no_api() -> [Book]:
@@ -86,3 +86,7 @@ def create_book_no_api() -> [Book]:
                   description="description2",
                   rating=60)
     return [book_1, book_2]
+
+
+def raise_item_not_found_exception():
+    raise HTTPException(status_code=404, detail="book_id is not existed")
