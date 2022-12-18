@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 from starlette.responses import JSONResponse
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, status, Form
 
 app = FastAPI()
 
@@ -49,6 +49,11 @@ async def negative_number_exception_handler(request: Request, exception: Negativ
         status_code=418,
         content={"message": exception.books_to_return}
     )
+
+
+@app.post("/books/login")
+async def book_login(username: str = Form(), password: str = Form()):
+    return {"username": username, "password": password}
 
 
 @app.get("/")
