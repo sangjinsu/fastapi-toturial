@@ -1,7 +1,7 @@
 import copy
 from typing import Optional
 
-from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi import FastAPI, Depends, HTTPException
 from starlette import status
 from pydantic import BaseModel, Field
 
@@ -59,7 +59,7 @@ async def read_todo(todo_id: int, db: Session = Depends(get_db)):
 async def update_todo(todo_id: int, todo: Todo, db: Session = Depends(get_db)):
     todo_model = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
     if todo is None:
-        http_exception()
+        raise_http_exception()
     todo_model.title = todo.title
     todo_model.description = todo.description
     todo_model.priority = todo.priority
@@ -72,5 +72,15 @@ async def update_todo(todo_id: int, todo: Todo, db: Session = Depends(get_db)):
     return todo_model
 
 
-def http_exception():
+@app.delete("/{todo_id}")
+async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
+    todo_model = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+    if todo_model is None:
+        raise_http_exception()
+    db.query(models.Todos).filter(models.Todos.id == todo_id).delete()
+    db.commit()
+    return todo_model
+
+
+def raise_http_exception():
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
