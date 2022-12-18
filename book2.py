@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 from starlette.responses import JSONResponse
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, status
 
 app = FastAPI()
 
@@ -82,7 +82,7 @@ async def read_book_no_rating(book_id: UUID):
     raise_item_not_found_exception()
 
 
-@app.post("/")
+@app.post("/", status_code=status.HTTP_201_CREATED)
 async def create_book(book: Book) -> [Book]:
     Books.append(book)
     return Books
