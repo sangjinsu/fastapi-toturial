@@ -36,6 +36,13 @@ class NegativeNumberException(Exception):
         self.books_to_return = books_to_return
 
 
+class BookNoRating(BaseModel):
+    id: UUID
+    title: str = Field(min_length=1)
+    author: str = Field(min_length=1, max_length=100)
+    description: str = Field(title="Description of the Book", min_length=1, max_length=100)
+
+
 @app.exception_handler(NegativeNumberException)
 async def negative_number_exception_handler(request: Request, exception: NegativeNumberException):
     return JSONResponse(
@@ -61,6 +68,14 @@ async def read_all_books(books_to_return: Optional[int] = None) -> [Book]:
 
 @app.get("/book/{book_id}")
 async def read_book(book_id: UUID):
+    for book in Books:
+        if book.id == book_id:
+            return book
+    raise_item_not_found_exception()
+
+
+@app.get("/book/rating/{book_id}", response_model=BookNoRating)
+async def read_book_no_rating(book_id: UUID):
     for book in Books:
         if book.id == book_id:
             return book
