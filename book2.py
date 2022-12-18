@@ -3,7 +3,8 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 from starlette.responses import JSONResponse
 
-from fastapi import FastAPI, HTTPException, Request, status, Form
+from fastapi import FastAPI, HTTPException, Request, status, Form, Header
+from secrets import compare_digest
 
 app = FastAPI()
 
@@ -52,8 +53,15 @@ async def negative_number_exception_handler(request: Request, exception: Negativ
 
 
 @app.post("/books/login")
-async def book_login(username: str = Form(), password: str = Form()):
-    return {"username": username, "password": password}
+async def book_login(book_id: int, username: str = Header(None), password: str = Header(None)):
+    if compare_digest(username, "FastAPIUser") and compare_digest(password, "test1234!"):
+        return Books[book_id]
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid User')
+
+
+@app.get("/header")
+async def read_header(random_header: Optional[str] = Header(None)):
+    return {"Random-Header": random_header}
 
 
 @app.get("/")
@@ -126,4 +134,4 @@ def create_book_no_api() -> [Book]:
 
 
 def raise_item_not_found_exception():
-    raise HTTPException(status_code=404, detail="book_id is not existed")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="book_id is not existed")
