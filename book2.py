@@ -56,6 +56,24 @@ async def create_book(book: Book) -> [Book]:
     return Books
 
 
+@app.put("/{book_id}")
+async def update_book(book_id: UUID, book: Book) -> Book:
+    for index, old_book in enumerate(Books):
+        if old_book.id == book_id:
+            Books[index] = book
+            return Books[index]
+    raise HTTPException(status_code=404, detail="book_id is not existed")
+
+
+@app.delete("/{book_id}")
+async def delete_book(book_id: UUID) -> Book:
+    for index, old_book in enumerate(Books):
+        if old_book.id == book_id:
+            deleted_book = Books.pop(index)
+            return deleted_book
+    raise HTTPException(status_code=404, detail="book_id is not existed")
+
+
 def create_book_no_api() -> [Book]:
     book_1 = Book(id=uuid4(),
                   title="Title1",
