@@ -1,7 +1,8 @@
+from typing import Optional
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
@@ -30,10 +31,23 @@ Books: [Book] = []
 
 
 @app.get("/")
-async def read_all_books() -> [Book]:
+async def read_all_books(books_to_return: Optional[int] = None) -> [Book]:
     if len(Books) == 0:
-        Books.append(create_book_no_api())
+        Books.extend(create_book_no_api())
+
+    if books_to_return and len(Books) >= books_to_return > 0:
+        new_books = Books[:books_to_return].copy()
+        return new_books
+
     return Books
+
+
+@app.get("/book/{book_id}")
+async def read_book(book_id: UUID):
+    for book in Books:
+        if book.id == book_id:
+            return book
+    raise HTTPException(status_code=404, detail="book_id is not existed")
 
 
 @app.post("/")
