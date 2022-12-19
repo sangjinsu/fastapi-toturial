@@ -31,15 +31,15 @@ def get_db():
 
 @app.get("/")
 async def read_all(db: Session = Depends(get_db)):
-    return db.query(models.Todos).all()
+    return db.query(models.Todo).all()
 
 
 @app.post("/", status_code=status.HTTP_201_CREATED)
 async def create_todo(todo: Todo, db: Session = Depends(get_db)):
-    new_todo = models.Todos(title=todo.title,
-                            description=todo.description,
-                            priority=todo.priority,
-                            complete=todo.complete)
+    new_todo = models.Todo(title=todo.title,
+                           description=todo.description,
+                           priority=todo.priority,
+                           complete=todo.complete)
     db.add(new_todo)
     db.commit()
     db.refresh(new_todo)
@@ -49,15 +49,15 @@ async def create_todo(todo: Todo, db: Session = Depends(get_db)):
 
 @app.get("/{todo_id}")
 async def read_todo(todo_id: int, db: Session = Depends(get_db)):
-    todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if todo is None:
-        http_exception()
+        raise_http_exception()
     return todo
 
 
 @app.put("/{todo_id}/", status_code=status.HTTP_202_ACCEPTED)
 async def update_todo(todo_id: int, todo: Todo, db: Session = Depends(get_db)):
-    todo_model = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+    todo_model = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if todo is None:
         raise_http_exception()
     todo_model.title = todo.title
@@ -74,10 +74,10 @@ async def update_todo(todo_id: int, todo: Todo, db: Session = Depends(get_db)):
 
 @app.delete("/{todo_id}")
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
-    todo_model = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+    todo_model = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if todo_model is None:
         raise_http_exception()
-    db.query(models.Todos).filter(models.Todos.id == todo_id).delete()
+    db.query(models.Todo).filter(models.Todo.id == todo_id).delete()
     db.commit()
     return todo_model
 
