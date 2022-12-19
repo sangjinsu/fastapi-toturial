@@ -43,11 +43,15 @@ async def read_all_by_user(user: User = Depends(get_current_user), db: Session =
 
 
 @app.post("/", status_code=status.HTTP_201_CREATED)
-async def create_todo(todo: Todo, db: Session = Depends(get_db)):
+async def create_todo(todo: Todo, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        raise get_user_exception()
+
     new_todo = models.Todo(title=todo.title,
                            description=todo.description,
                            priority=todo.priority,
-                           complete=todo.complete)
+                           complete=todo.complete,
+                           owner_id=user.id)
     db.add(new_todo)
     db.commit()
     db.refresh(new_todo)
