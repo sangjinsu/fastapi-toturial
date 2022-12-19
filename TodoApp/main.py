@@ -71,8 +71,14 @@ async def read_todo(todo_id: int, user: User = Depends(get_current_user), db: Se
 
 
 @app.put("/todo/{todo_id}/", status_code=status.HTTP_202_ACCEPTED)
-async def update_todo(todo_id: int, todo: Todo, db: Session = Depends(get_db)):
-    todo_model = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+async def update_todo(todo_id: int, todo: Todo, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        raise get_user_exception()
+
+    todo_model = db.query(models.Todo) \
+        .filter(models.Todo.id == todo_id) \
+        .filter(models.Todo.owner_id == user.id) \
+        .first()
     if todo is None:
         raise_http_exception()
     todo_model.title = todo.title
