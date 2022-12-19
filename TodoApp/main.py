@@ -94,8 +94,14 @@ async def update_todo(todo_id: int, todo: Todo, user: User = Depends(get_current
 
 
 @app.delete("/todo/{todo_id}")
-async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
-    todo_model = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+async def delete_todo(todo_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        raise get_user_exception()
+
+    todo_model = db.query(models.Todo) \
+        .filter(models.Todo.id == todo_id) \
+        .filter(models.Todo.owner_id == user.id) \
+        .first()
     if todo_model is None:
         raise_http_exception()
     db.query(models.Todo).filter(models.Todo.id == todo_id).delete()
