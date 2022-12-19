@@ -29,7 +29,7 @@ class CreateUser(BaseModel):
 
 class User(BaseModel):
     id: int
-    username: int
+    username: str
 
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

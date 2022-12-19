@@ -55,15 +55,18 @@ async def create_todo(todo: Todo, db: Session = Depends(get_db)):
     return new_todo
 
 
-@app.get("/{todo_id}")
-async def read_todo(todo_id: int, db: Session = Depends(get_db)):
-    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+@app.get("/todo/{todo_id}")
+async def read_todo(todo_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    todo = db.query(models.Todo) \
+        .filter(models.Todo.id == todo_id) \
+        .filter(models.Todo.id == user.id) \
+        .first()
     if todo is None:
         raise_http_exception()
     return todo
 
 
-@app.put("/{todo_id}/", status_code=status.HTTP_202_ACCEPTED)
+@app.put("/todo/{todo_id}/", status_code=status.HTTP_202_ACCEPTED)
 async def update_todo(todo_id: int, todo: Todo, db: Session = Depends(get_db)):
     todo_model = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if todo is None:
@@ -80,7 +83,7 @@ async def update_todo(todo_id: int, todo: Todo, db: Session = Depends(get_db)):
     return todo_model
 
 
-@app.delete("/{todo_id}")
+@app.delete("/todo/{todo_id}")
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     todo_model = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if todo_model is None:
