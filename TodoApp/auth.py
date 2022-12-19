@@ -27,6 +27,11 @@ class CreateUser(BaseModel):
     password: str
 
 
+class User(BaseModel):
+    id: int
+    username: int
+
+
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 models.Base.metadata.create_all(bind=engine)
@@ -73,6 +78,27 @@ def create_access_token(username: str, user_id: int, expires_delta: Optional[tim
     return encoded_jwt
 
 
+async def get_current_user(token: str = Depends(oauth2_brear), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        user_id: int = payload.get("id")
+        if username is None or user_id is None:
+            raise credentials_exception
+        token_data = dict(username=username, id=user_id)
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.User).filter(models.User.username == username, models.User.id == user_id).first()
+    if user is None:
+        raise credentials_exception
+    return User(username=user.username, id=user.id)
+
+
 @app.post("/create/user", status_code=status.HTTP_201_CREATED)
 async def create_new_user(create_user: CreateUser, db: Session = Depends(get_db)):
     create_user_model = models.User(email=create_user.email,
@@ -96,4 +122,4 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token = create_access_token(user.username, user.id, token_expires)
-    return dict(token=token)
+    return dict(access_token=token, token_type="bearer")
