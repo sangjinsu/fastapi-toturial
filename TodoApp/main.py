@@ -6,6 +6,7 @@ from starlette import status
 from pydantic import BaseModel, Field
 
 import models
+from auth import get_current_user, User, get_user_exception
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 
@@ -32,6 +33,13 @@ def get_db():
 @app.get("/")
 async def read_all(db: Session = Depends(get_db)):
     return db.query(models.Todo).all()
+
+
+@app.get("/todos/user")
+async def read_all_by_user(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        raise get_user_exception()
+    return db.query(models.Todo).filter(models.Todo.owner_id == user.id).all()
 
 
 @app.post("/", status_code=status.HTTP_201_CREATED)
