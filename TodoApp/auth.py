@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
-from h11._abnf import status_code
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional
 
@@ -41,6 +41,17 @@ def get_password_hash(password: str):
     return bcrypt_context.hash(password)
 
 
+def verify_password(plain: str, hashed_password: str):
+    return bcrypt_context.verify(plain, hashed_password)
+
+
+def authenticate_user(username: str, password: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user or not verify_password(password, user.hashed_password):
+        return False
+    return True
+
+
 @app.post("/create/user", status_code=status.HTTP_201_CREATED)
 async def create_new_user(create_user: CreateUser, db: Session = Depends(get_db)):
     create_user_model = models.User(email=create_user.email,
@@ -55,3 +66,12 @@ async def create_new_user(create_user: CreateUser, db: Session = Depends(get_db)
     db.refresh(create_user_model)
 
     return create_user_model
+
+
+@app.post("/token", status_code=status.HTTP_200_OK)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = authenticate_user(form_data.username, form_data.password, db)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return "User Verified"
+
