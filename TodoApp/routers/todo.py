@@ -2,8 +2,10 @@ from fastapi import Depends, HTTPException, status, APIRouter
 from .auth import get_current_user, User, get_user_exception
 from schemas import todo
 from models import models
-from config.database import get_db
+from config.database import get_db, render_query
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects import mysql
+from sqlalchemy import insert
 
 router = APIRouter(
     prefix="/todos",
@@ -11,10 +13,25 @@ router = APIRouter(
 )
 
 
-
 @router.get("/")
 async def read_all(db: Session = Depends(get_db)):
+    new_todo = models.Todo(title='todo.title',
+                           description='todo.description',
+                           priority=7,
+                           complete=False,
+                           owner_id=3)
+    model_value = await method_name(new_todo)
+    query = insert(models.Todo).values(model_value)
+    raw_query = query.compile(compile_kwargs={"literal_binds": True}, dialect=mysql.dialect())
+    print(raw_query)
+    # print(render_query(query, db))
     return db.query(models.Todo).all()
+
+
+async def method_name(model):
+    model_value = model.__dict__
+    model_value.pop('_sa_instance_state')
+    return model_value
 
 
 @router.get("/user")
