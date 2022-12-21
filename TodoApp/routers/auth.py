@@ -1,16 +1,15 @@
 from typing import Optional
-
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import HTTPException, Depends, status, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from starlette import status
 
-import models
-from database import SessionLocal, engine
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+
+from ..config.database import get_db
+from TodoApp.models import models
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -34,22 +33,13 @@ class User(BaseModel):
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-models.Base.metadata.create_all(bind=engine)
-
 oauth2_brear = OAuth2PasswordBearer(tokenUrl="token")
 
-app = FastAPI()
-
-
-async def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    except HTTPException:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="DB Connection Error")
-    finally:
-        db.close()
+router = APIRouter(
+    prefix="/auth",
+    tags=["auth"],
+    responses={401: {"user": "Not authorized"}}
+)
 
 
 def get_password_hash(password: str):
@@ -93,7 +83,7 @@ async def get_current_user(token: str = Depends(oauth2_brear), db: Session = Dep
     return User(username=user.username, id=user.id)
 
 
-@app.post("/create/user", status_code=status.HTTP_201_CREATED)
+@router.post("/create/user", status_code=status.HTTP_201_CREATED)
 async def create_new_user(create_user: CreateUser, db: Session = Depends(get_db)):
     create_user_model = models.User(email=create_user.email,
                                     first_name=create_user.first_name,
@@ -109,7 +99,7 @@ async def create_new_user(create_user: CreateUser, db: Session = Depends(get_db)
     return create_user_model
 
 
-@app.post("/token", status_code=status.HTTP_200_OK)
+@router.post("/token", status_code=status.HTTP_200_OK)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
