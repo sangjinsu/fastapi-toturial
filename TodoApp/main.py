@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 
 from config.database import create_tables
 from routers import auth, todo
-from company import companyapi
+from company import companyapi, dependencies
 
 app = FastAPI()
 
@@ -14,5 +14,6 @@ app.include_router(
     companyapi.router,
     tags=['company'],
     prefix="/companyapis",
+    dependencies=[Depends(dependencies.get_token_header)],
     responses={410: {"desc": "Internal Error"}},
 )
