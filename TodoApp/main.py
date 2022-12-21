@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 
-from config.database import Base, engine
+from config.database import create_tables
 from routers import auth, todo
 
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
+create_tables()
 
 app.include_router(auth.router)
 app.include_router(todo.router)

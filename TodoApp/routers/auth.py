@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-from ..config.database import get_db
-from TodoApp.models import models
+from config.database import get_db
+from models import models
 
 # to get a string like this run:
 # openssl rand -hex 32

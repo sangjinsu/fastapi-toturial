@@ -14,7 +14,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-async def get_db():
+def get_db():
     db = SessionLocal()
     try:
         yield db
@@ -23,3 +23,7 @@ async def get_db():
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="DB Connection Error")
     finally:
         db.close()
+
+
+def create_tables():
+    Base.metadata.create_all(bind=engine)
