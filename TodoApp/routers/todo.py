@@ -1,7 +1,6 @@
-from typing import Optional
 from fastapi import Depends, HTTPException, status, APIRouter
-from pydantic import BaseModel, Field
 from .auth import get_current_user, User, get_user_exception
+from schemas import todo
 from models import models
 from config.database import get_db
 from sqlalchemy.orm import Session
@@ -11,12 +10,6 @@ router = APIRouter(
     tags=["todo"],
 )
 
-
-class Todo(BaseModel):
-    title: str
-    description: Optional[str]
-    priority: int = Field(gt=0, lt=6, description="The priority must be between 1 ~ 5")
-    complete: bool = Field(default=False)
 
 
 @router.get("/")
@@ -32,7 +25,7 @@ async def read_all_by_user(user: User = Depends(get_current_user), db: Session =
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_todo(todo: Todo, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def create_todo(todo: todo.Todo, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         raise get_user_exception()
 
@@ -60,7 +53,7 @@ async def read_todo(todo_id: int, user: User = Depends(get_current_user), db: Se
 
 
 @router.put("/{todo_id}/", status_code=status.HTTP_202_ACCEPTED)
-async def update_todo(todo_id: int, todo: Todo, user: User = Depends(get_current_user),
+async def update_todo(todo_id: int, todo: todo.Todo, user: User = Depends(get_current_user),
                       db: Session = Depends(get_db)):
     if user is None:
         raise get_user_exception()
