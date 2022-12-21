@@ -3,10 +3,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from fastapi import HTTPException, status
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:tkdwlstn@localhost:3306/todoapp"
+MYSQL_URL = "mysql+pymysql://root:tkdwlstn@localhost:3306/todoapp"
+SQLITE_URL = "sqlite:///./todo.db"
+SQLALCHEMY_DATABASE_URL = SQLITE_URL
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

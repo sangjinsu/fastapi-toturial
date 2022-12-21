@@ -6,7 +6,10 @@ from models import models
 from config.database import get_db
 from sqlalchemy.orm import Session
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/todos",
+    tags=["todo"],
+)
 
 
 class Todo(BaseModel):
@@ -21,7 +24,7 @@ async def read_all(db: Session = Depends(get_db)):
     return db.query(models.Todo).all()
 
 
-@router.get("/todos/user")
+@router.get("/user")
 async def read_all_by_user(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         raise get_user_exception()
@@ -45,7 +48,7 @@ async def create_todo(todo: Todo, user: User = Depends(get_current_user), db: Se
     return new_todo
 
 
-@router.get("/todo/{todo_id}")
+@router.get("/{todo_id}")
 async def read_todo(todo_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     todo = db.query(models.Todo) \
         .filter(models.Todo.id == todo_id) \
@@ -56,7 +59,7 @@ async def read_todo(todo_id: int, user: User = Depends(get_current_user), db: Se
     return todo
 
 
-@router.put("/todo/{todo_id}/", status_code=status.HTTP_202_ACCEPTED)
+@router.put("/{todo_id}/", status_code=status.HTTP_202_ACCEPTED)
 async def update_todo(todo_id: int, todo: Todo, user: User = Depends(get_current_user),
                       db: Session = Depends(get_db)):
     if user is None:
@@ -80,7 +83,7 @@ async def update_todo(todo_id: int, todo: Todo, user: User = Depends(get_current
     return todo_model
 
 
-@router.delete("/todo/{todo_id}")
+@router.delete("/{todo_id}")
 async def delete_todo(todo_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         raise get_user_exception()
