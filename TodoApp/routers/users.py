@@ -59,7 +59,7 @@ async def delete_user(user: dict = Depends(get_current_user), db: Session = Depe
     user_model = db.query(models.User).filter(models.User.id == user.get("id")).first()
     if user_model is None:
         return 'Invalid user or request'
-    db.query(models.User).filter(models.User.id == user_model.get("id")).delete()
+    db.query(models.User).filter(models.User.id == user_model.id).delete()
     db.commit()
 
     return 'Delete Successfully'
